@@ -31,46 +31,54 @@ angular.module('autofields.core', [])
 
 		// Directive-wide Handler Default Settings
 		autofields.settings = {
-			classes: {
-				container: [],
-				input: [],
-				label: []
-			},
-			attributes: {
-				container: {
-					'class': '$type'
-				},
-				input: {
-					id: '$property_clean',
-					name: '$property_clean',
-					type: '$type',
-					ngModel: '$data.$property',
-					placeholder: '$placeholder'
-				},
-				label: {}
-			},
-			container: '<div class="autofields" ng-form name="$form"></div>',
-			scope: {}
-		};
+	        classes: {
+	            container: [],
+	            input: [],
+	            label: []
+	        },
+	        attributes: {
+	            container: {
+	                'class': '$type'
+	            },
+	            input: {
+	                //Change to using Attr, I would prefer not to.
+	                ngAttrId: '$property_clean',
+	                ngAttrName: '$property_clean',
+	                type: '$type',
+	                ngModel: "$data$dot$property",
+	                placeholder: '$placeholder'
+	            },
+	            label: {}
+	        },
+	        container: '<div class="autofields" ng-form name="$form"></div>',
+	        scope: {}
+	    };
 
-		// Field Building Helpers
-		// Add Attributes to Element
-		var setAttributes = autofields.setAttributes = function(directive, field, el, attrs){
-			angular.forEach(attrs, function(value, attr){
-				if(value && typeof value == 'string'){
-					value = value
-						.replace(/\$form/g, directive.formStr)
-						.replace(/\$schema/g, directive.schemaStr)
-						.replace(/\$type/g, field.type || 'text')
-						.replace(/\$property_clean/g, field.property.replace(/\[|\]|\./g, ''))
-						.replace(/\$property/g, field.property)
-						.replace(/\$data/g, directive.dataStr)
-						.replace(/\$placeholder/g, field.placeholder != null ? field.placeholder : helper.LabelText(field));
-				}
-				el.attr(helper.CamelToDash(attr), value);
-			});
-		};
-		// Standard Container for field
+	    // Field Building Helpers
+	    // Add Attributes to Element
+	    var setAttributes = autofields.setAttributes = function (directive, field, el, attrs) {
+	        angular.forEach(attrs, function (value, attr) {
+	            if (value && typeof value == 'string') {
+	                if (field.attr != undefined && field.attr.index != undefined) {
+	                    value = value
+                            .replace(/\$property_clean/g, field.attr.index + "[{{$index}}]." + field.property.replace(/\[|\]|\./g, ''))
+                            .replace(/\$property/g, field.attr.index + "." + field.property)
+                            .replace(/\$data/g, '')
+                            .replace(/\$dot/g, '');
+	                }
+	                value = value
+                        .replace(/\$form/g, directive.formStr)
+                        .replace(/\$schema/g, directive.schemaStr)
+                        .replace(/\$type/g, field.type || 'text')
+                        .replace(/\$property_clean/g, field.property.replace(/\[|\]|\./g, ''))
+                        .replace(/\$property/g, field.property)
+                        .replace(/\$dot/g, '.')
+                        .replace(/\$data/g, directive.dataStr)
+                        .replace(/\$placeholder/g, field.placeholder != null ? field.placeholder : helper.LabelText(field));
+	            }
+	            el.attr(helper.CamelToDash(attr), value);
+	        });
+	    };Container for field
 		var getFieldContainer = function(directive, field, attrs){
 			var fieldContainer = angular.element('<div/>');
 			attrs = angular.extend({}, autofields.settings.attributes.container, attrs);
